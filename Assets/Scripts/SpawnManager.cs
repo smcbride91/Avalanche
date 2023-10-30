@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
-    public GameObject[] animalPrefabs;
-    private float spawnRangeX = 20;
-    private float spawnPosZ = 20;
+    public GameObject[] obstaclePrefabs;
+    private float spawnRangeXLeft = -22.2f;
+    private float spawnRangeXRight = 18.83f;
+;
+;
+    private float spawnPosZ = 26.33f;
     private float startDelay = 2;
     private float spawnInterval = 1.5f;
     // Start is called before the first frame update
@@ -24,10 +27,10 @@ public class SpawnManager : MonoBehaviour
 
     void SpawnRandomObstacle()
     {
-        int animalIndex = Random.Range(0, animalPrefabs.Length);
-        Vector3 spawnPos = new Vector3(Random.Range(-spawnRangeX, spawnRangeX), 0, spawnPosZ);
+        int obstacleIndex = Random.Range(0, obstaclePrefabs.Length);
+        Vector3 spawnPos = new Vector3(Random.Range(spawnRangeXLeft, spawnRangeXRight), 0, spawnPosZ);
 
-        Instantiate(animalPrefabs[animalIndex], spawnPos, animalPrefabs[animalIndex].transform.rotation);
+        Instantiate(obstaclePrefabs[obstacleIndex], spawnPos, obstaclePrefabs[obstacleIndex].transform.rotation);
 
     }
 }
