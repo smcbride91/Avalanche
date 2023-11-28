@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
-    private float turnSpeed = 100.0f;
+    private float turnSpeed = 30.0f;
     private float horizontalInput;
     private float forwardInput;
     public float speed = 20.0f;
@@ -51,10 +51,12 @@ public class PlayerMove : MonoBehaviour
         forwardInput = Input.GetAxis("Vertical");
 
         transform.Translate(Vector3.forward * Time.deltaTime * speed * forwardInput);
-        transform.Rotate(Vector3.up * Time.deltaTime * turnSpeed * horizontalInput);
+        //transform.Rotate(Vector3.up * Time.deltaTime * turnSpeed * horizontalInput);
 
-       // horizontalInput = Input.GetAxis("Horizontal");
-      //  transform.Translate(Vector3.right * horizontalInput * Time.deltaTime * speed);
+        transform.Translate(Vector3.left * Time.deltaTime * turnSpeed * horizontalInput);
+
+        // horizontalInput = Input.GetAxis("Horizontal");
+        //  transform.Translate(Vector3.right * horizontalInput * Time.deltaTime * speed);
 
     }
 }
