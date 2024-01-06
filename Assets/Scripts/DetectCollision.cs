@@ -19,9 +19,13 @@ public class DetectCollision : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Destroy(gameObject);
-        //Destroy(other.gameObject);
-        Debug.Log("Game over");
-        SceneManager.LoadScene("GameOver");
+        if (gameObject.name != "Player_Snow")
+        {
+            Destroy(gameObject);
+            //Destroy(other.gameObject);
+            // Debug.Log("Game over");
+            SceneManager.LoadScene("GameOver");
+        }
+
     }
 }
