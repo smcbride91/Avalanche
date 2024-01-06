@@ -9,14 +9,14 @@ public class SpawnManager : MonoBehaviour
     public GameObject[] obstaclePrefabs;
     public TextMeshProUGUI scoreText;
 
-    private float spawnRangeXLeft = -22.2f;
-    private float spawnRangeXRight = 18.83f;
+    private float spawnRangeXLeft = -25.0f;
+    private float spawnRangeXRight = 10.0f;
     private int score;
     private int scoreIncrease = 5;
-    private float spawnPosZ = 26.33f;
+    private float spawnPosZ = 23.0f;
     private float startDelay = 2;
     private float spawnInterval = 1.5f;
-    private float spawnPosY = 9.77f;
+    private float spawnPosY = -7.36f;
     private float increaseSpeedDelay;
     // Start is called before the first frame update
     void Start()
@@ -39,10 +39,11 @@ public class SpawnManager : MonoBehaviour
 
     void SpawnRandomObstacle()
     {
-        int obstacleIndex = UnityEngine.Random.Range(0, obstaclePrefabs.Length);
+        //int obstacleIndex = UnityEngine.Random.Range(0, obstaclePrefabs.Length);
+        int obstacleIndex = UnityEngine.Random.Range(0, 6);
         Vector3 spawnPos = new Vector3(UnityEngine.Random.Range(spawnRangeXLeft, spawnRangeXRight), spawnPosY, spawnPosZ);
 
-        //Instantiate(obstaclePrefabs[obstacleIndex], spawnPos, obstaclePrefabs[obstacleIndex].transform.rotation);
+        Instantiate(obstaclePrefabs[obstacleIndex], spawnPos, obstaclePrefabs[obstacleIndex].transform.rotation);
         UpdateScore(scoreIncrease);
 
     }
