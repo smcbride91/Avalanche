@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class DestroyOutOfBounds : MonoBehaviour
 {
-    private float lowerBound = -10.0f;
+    private float lowerBound = -14.0f;
+    private Spawn spawn;
+
     // Start is called before the first frame update
     void Start()
     {
-
+        spawn = GameObject.Find("SpawnManager").GetComponent<Spawn>();
     }
 
     // Update is called once per frame
@@ -19,6 +21,7 @@ public class DestroyOutOfBounds : MonoBehaviour
        if (transform.position.z < lowerBound)
         {
             Destroy(gameObject);
+            spawn.updateScore(5);
         }
     }
 }

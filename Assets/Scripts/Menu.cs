@@ -4,14 +4,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 public class Menu : MonoBehaviour
 {
-    public void OnPlayButton()
+    public void MoveToScene(int sceneID)
     {
-        SceneManager.LoadScene("Avalanche");
+        SceneManager.LoadScene(sceneID);
     }
 
-    public void OnQuitButton()
-    {
-        Application.Quit();
-    }
-
+ 
 }
