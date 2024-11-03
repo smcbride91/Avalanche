@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 3149466922917774737}
   - component: {fileID: 7086910985286712811}
   - component: {fileID: 5468735938099938171}
-  - component: {fileID: 3237196480254675613}
-  - component: {fileID: 836061168303048331}
+  - component: {fileID: -1895926213087200908}
+  - component: {fileID: 7407828937997984861}
   m_Layer: 0
   m_Name: Rock_3
   m_TagString: Untagged
@@ -28,12 +28,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2067877485317521378}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.7173619, y: 8.574227, z: 22.078197}
+  m_LocalPosition: {x: 0.7173619, y: 0, z: 22.078197}
   m_LocalScale: {x: 4.5411, y: 4.5411, z: 4.5411}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3149466922917774737
 MeshFilter:
@@ -54,6 +55,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -92,13 +94,21 @@ MeshCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2067877485317521378}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 4
+  serializedVersion: 5
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 1263753340748250137, guid: 7ea8ace6ec6fbdf4eaf920ade68b9f10, type: 3}
---- !u!114 &3237196480254675613
+--- !u!114 &-1895926213087200908
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -110,7 +120,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdd2eab9397421747b16287d962414ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &836061168303048331
+--- !u!114 &7407828937997984861
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
