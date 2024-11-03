@@ -8,6 +8,9 @@ using Unity.Netcode;
 
 public class SpawnMP : NetworkBehaviour
 {
+    private NetworkVariable<bool> isP1Active = new NetworkVariable<bool>(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    private NetworkVariable<bool> isP2Active = new NetworkVariable<bool>(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
     public GameObject[] obstaclePrefabs;
     public TextMeshProUGUI p1ScoreText;
     public TextMeshProUGUI p2ScoreText;
@@ -19,8 +22,6 @@ public class SpawnMP : NetworkBehaviour
     private float startDelay = 2;
     private float spawnInterval = 1.5f;
     public bool isGameActive;
-    public bool isP1Active;
-    public bool isP2Active;
     public bool playerDeath;
 
     // Start is called before the first frame update
@@ -68,12 +69,12 @@ public class SpawnMP : NetworkBehaviour
     {
         if (isGameActive == true)
         {
-            if (isP1Active == true)
+            if (isP1Active.Value == true)
             {
                 p1Score += scoreToAdd;
                 p1ScoreText.text = "P1 Score: " + p1Score;
             }
-            if (isP2Active == true)
+            if (isP2Active.Value == true)
             {
                 p2Score += scoreToAdd;
                 p2ScoreText.text = "P2 Score: " + p2Score;
@@ -101,14 +102,24 @@ public class SpawnMP : NetworkBehaviour
     public void setActive()
     {
         isGameActive = true;
-        isP1Active = true;
-        isP2Active = true;
         playerDeath = false;
     }
 
     public void setFail()
     {
-        isGameActive = false;
+        if (IsServer)
+        {
+            isP1Active.Value = false;
+        }
+        else
+        {
+            isP2Active.Value = false;
+        }
+
+        if ((isP1Active.Value == false) && (isP2Active.Value == false))
+        {
+            isGameActive = false;
+        }
         playerDeath = true;
     }
     

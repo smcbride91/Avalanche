@@ -8,7 +8,6 @@ using Unity.Netcode;
 
 public class DetectCollisionMP : NetworkBehaviour
 {
-    //public TextMeshProUGUI gameOverText;
     private SpawnMP spawnMP;
     public AudioClip success;
     public AudioClip failure;
@@ -20,12 +19,6 @@ public class DetectCollisionMP : NetworkBehaviour
     {
         spawnMP = GameObject.Find("SpawnManager").GetComponent<SpawnMP>();
         playerAudio = GetComponent<AudioSource>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     private void OnTriggerEnter(Collider other)
@@ -45,7 +38,6 @@ public class DetectCollisionMP : NetworkBehaviour
 
                 playerAudio.PlayOneShot(success,1.0f);
                 
-            //    Destroy(other.gameObject); 
 
             }
             else if (other.name =="Player(Clone)")
@@ -55,7 +47,6 @@ public class DetectCollisionMP : NetworkBehaviour
             else
             {
                 playerAudio.PlayOneShot(failure, 1.0f);
-  //              gameOverText.gameObject.SetActive(true);
                 spawnMP.setFail();
             }
         }

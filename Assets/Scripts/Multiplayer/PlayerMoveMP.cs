@@ -29,7 +29,7 @@ public class PlayerMoveMP : NetworkBehaviour
     private void Update()
     {
        
-       if (spawnMP.isGameActive && spawnMP.playerDeath == false)
+       if (spawnMP.playerDeath == false)
         {
                     Move();
                     Still();
