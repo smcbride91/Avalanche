@@ -56,7 +56,7 @@ public class DetectCollision : MonoBehaviour
             {
                 playerAudio.PlayOneShot(bark, 1.0f);
                 gameOverText.gameObject.SetActive(true);
-                Destroy(other.gameObject);
+             //   Destroy(other.gameObject);
                 spawn.setFail();
 
             }

@@ -4,7 +4,6 @@ using UnityEngine.AI;
 public class EnemyAttack : MonoBehaviour
 {
     public NavMeshAgent agent;
-    //public NavMeshAgent player;
     private GameObject[] playerObjects;
 
 
