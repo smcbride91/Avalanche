@@ -56,7 +56,8 @@ public class Spawn : MonoBehaviour
         if (isGameActive == true)
         {
             int enemyIndex = Random.Range(0, enemyPrefabs.Length);
-            Instantiate(enemyPrefabs[enemyIndex], GenerateSpawnPosition(), enemyPrefabs[enemyIndex].transform.rotation);
+            Vector3 enemyPos = new Vector3(0f, 0.6f, 20f);
+            Instantiate(enemyPrefabs[enemyIndex], enemyPos, enemyPrefabs[enemyIndex].transform.rotation);
 
         }
     }

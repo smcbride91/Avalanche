@@ -20,11 +20,7 @@ public class EnemyCollide : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.name == "Player")
-        {
-            // do nothing
-        }
-        else if (other.gameObject.tag == "Obstacle")
+    if (other.gameObject.tag == "Obstacle")
         {
             spawn.SpawnRandomEnemy();
             Destroy(this.gameObject);
