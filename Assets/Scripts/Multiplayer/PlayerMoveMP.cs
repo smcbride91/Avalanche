@@ -22,7 +22,6 @@ public class PlayerMoveMP : NetworkBehaviour
     void Start()
     {
         spawnMP = GameObject.Find("SpawnManager").GetComponent<SpawnMP>();
-        networkManagerUI = GameObject.Find("NetworkManagerUI").GetComponent<NetworkManagerUI>();
         this.rb = GetComponent<Rigidbody>();
     }
 

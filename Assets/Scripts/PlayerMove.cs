@@ -12,10 +12,10 @@ public class PlayerMove : MonoBehaviour
     private float horizontalInput;
     private float forwardInput;
     private float speed = 20.0f;
-    private float xRangeLeft = 23.58f;
-    private float xRangeRight = -26.4f;
-    private float zRangeForward = 33.17f;
-    private float zRangeBack = 12.0f;
+//    private float xRangeLeft = 23.58f;
+//    private float xRangeRight = -26.4f;
+//    private float zRangeForward = 33.17f;
+//    private float zRangeBack = 12.0f;
     private Spawn spawn;
 
     void Start()
@@ -32,7 +32,7 @@ public class PlayerMove : MonoBehaviour
             Move();
             still();
 
-            if (transform.position.z > zRangeForward)
+ /*           if (transform.position.z > zRangeForward)
 
             {
                 transform.position = new Vector3(transform.position.x, transform.position.y, zRangeForward);
@@ -55,7 +55,7 @@ public class PlayerMove : MonoBehaviour
             {
                 transform.position = new Vector3(xRangeLeft, transform.position.y, transform.position.z);
             }
-
+ */
             horizontalInput = Input.GetAxis("Horizontal");
             forwardInput = Input.GetAxis("Vertical");
 

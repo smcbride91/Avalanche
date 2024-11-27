@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class Spawn : MonoBehaviour
 {
     public GameObject[] obstaclePrefabs;
+    public GameObject[] enemyPrefabs;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI highScoreText;
     public Button restartButton;
@@ -15,7 +16,7 @@ public class Spawn : MonoBehaviour
     private int highScore;
     private float spawnRange = 20.0f;
     private float spawnPosZ = 40.23f;
-    private float spawnPosY = 8.574228f;
+    private float spawnPosY = 0.32f;
     private float startDelay = 2;
     private float spawnInterval = 1.5f;
     public bool isGameActive;
@@ -28,7 +29,9 @@ public class Spawn : MonoBehaviour
         setActive();
         updateScore(score);
         InvokeRepeating("SpawnRandomObstacle", startDelay, spawnInterval);
-        
+        //InvokeRepeating("SpawnRandomEnemy", startDelay, spawnInterval);
+        SpawnRandomEnemy();
+
     }
 
     // Update is called once per frame
@@ -44,6 +47,16 @@ public class Spawn : MonoBehaviour
         {
             int obstacleIndex = Random.Range(0, obstaclePrefabs.Length);
             Instantiate(obstaclePrefabs[obstacleIndex], GenerateSpawnPosition(), obstaclePrefabs[obstacleIndex].transform.rotation);
+
+        }
+    }
+
+    public void SpawnRandomEnemy()
+    {
+        if (isGameActive == true)
+        {
+            int enemyIndex = Random.Range(0, enemyPrefabs.Length);
+            Instantiate(enemyPrefabs[enemyIndex], GenerateSpawnPosition(), enemyPrefabs[enemyIndex].transform.rotation);
 
         }
     }

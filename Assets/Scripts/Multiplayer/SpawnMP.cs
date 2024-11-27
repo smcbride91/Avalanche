@@ -34,13 +34,6 @@ public class SpawnMP : NetworkBehaviour
         updateScore(0);
         
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void InvokeSpawn()
     {
         InvokeRepeating("SpawnRandomObstacle", startDelay, spawnInterval);
@@ -50,7 +43,7 @@ public class SpawnMP : NetworkBehaviour
     {
         if (isGameActive == true)
         {
-          //  Instantiate(spawnedObjectPrefab);
+ 
             int obstacleIndex = Random.Range(1, obstaclePrefabs.Length);
             GameObject spawnedObjectTransform = Instantiate(obstaclePrefabs[obstacleIndex], GenerateSpawnPosition(), obstaclePrefabs[obstacleIndex].transform.rotation);
             spawnedObjectTransform.GetComponent<NetworkObject>().Spawn(true);

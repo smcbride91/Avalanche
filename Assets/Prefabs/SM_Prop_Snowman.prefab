@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 2005424813297686987}
   m_Layer: 0
   m_Name: SM_Prop_Snowman
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
