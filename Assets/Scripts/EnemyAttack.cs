@@ -3,21 +3,48 @@ using UnityEngine.AI;
 
 public class EnemyAttack : MonoBehaviour
 {
-    public NavMeshAgent agent;
-    private GameObject[] playerObjects;
+    [Header("Navigation Settings")]
+    [SerializeField] private NavMeshAgent agent;
 
+    private Transform playerTarget;
 
-    void Start()
+    private void Start()
     {
-    playerObjects = GameObject.FindGameObjectsWithTag("Player");
-
+        AssignClosestPlayer();
     }
-    // Update is called once per frame
-    void Update()
+
+    private void Update()
     {
+        MoveTowardsPlayer();
+    }
+
+    /// <summary>
+    /// Finds the closest player and assigns it as the target.
+    /// </summary>
+    private void AssignClosestPlayer()
+    {
+        GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
+
         if (playerObjects.Length > 0)
-            {
-            agent.SetDestination(playerObjects[0].transform.position);
+        {
+            // For simplicity, assign the first player found. 
+            // Could be expanded to calculate the closest player.
+            playerTarget = playerObjects[0].transform;
+        }
+        else
+        {
+            Debug.LogWarning("No objects with the tag 'Player' were found.");
+        }
+    }
+
+    /// <summary>
+    /// Moves the enemy towards the assigned player target if available.
+    /// </summary>
+    private void MoveTowardsPlayer()
+    {
+        if (playerTarget != null)
+        {
+            agent.SetDestination(playerTarget.position);
         }
     }
 }

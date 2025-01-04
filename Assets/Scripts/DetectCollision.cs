@@ -1,72 +1,121 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class DetectCollision : MonoBehaviour
 {
     public TextMeshProUGUI gameOverText;
-    private Rigidbody rb;
-    private Spawn spawn;
     public AudioClip success;
     public AudioClip failure;
     public AudioClip bounce;
     public AudioClip bark;
+    [SerializeField] private float bounceForce;
+
+    private Rigidbody rb;
+    private SpawnManager spawnManager;
     private AudioSource playerAudio;
 
-    [SerializeField] float bounceForce;
+    // Constants for object names
+    private const string SpawnManagerName = "SpawnManager";
+    private const string FenceName = "SM_Prop_Fence_02(Clone)";
+    private const string GroundName = "Ground";
+    private const string EnemyPrefix = "Enemy";
+    private const string WolfPrefix = "Wolf";
 
-    // Start is called before the first frame update
-    
-    void Start()
+    private void Start()
     {
-        spawn = GameObject.Find("SpawnManager").GetComponent<Spawn>();
+        spawnManager = GameObject.Find(SpawnManagerName)?.GetComponent<SpawnManager>();
         playerAudio = GetComponent<AudioSource>();
-        this.rb = GetComponent<Rigidbody>();
-    }
+        rb = GetComponent<Rigidbody>();
 
+        if (spawnManager == null)
+        {
+            Debug.LogError($"SpawnManager not found. Ensure a GameObject named '{SpawnManagerName}' exists with the SpawnManager script attached.");
+        }
+
+        if (playerAudio == null)
+        {
+            Debug.LogError("AudioSource component not found. Ensure this GameObject has an AudioSource attached.");
+        }
+
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody component not found. Ensure this GameObject has a Rigidbody attached.");
+        }
+    }
 
     private void OnTriggerEnter(Collider other)
     {
+        string objectName = other.name;
+
+        switch (objectName)
         {
-            if (other.name == "SM_Prop_Fence_02(Clone)")
-            {
-                spawn.updateScore(20);
-                playerAudio.PlayOneShot(success, 1.0f);
-                Destroy(other.gameObject);
-            }
-            else
-            if (other.name == "Ground")
-            {
-                // don't do anything
-            }
-            else if (other.name.StartsWith("Enemy"))
-            {
-                playerAudio.PlayOneShot(bounce, 1.0f);
-                Vector3 dir = other.transform.position - this.transform.position;
-                // dir.y = 0;
-                dir = dir.normalized;
-                rb.AddForce(dir * bounceForce);
-                //rb.AddExplosionForce(bounceForce, other.transform.position, 20);
-            }
+            case FenceName:
+                HandleFenceCollision(other);
+                break;
 
-            else if (other.name.StartsWith("Wolf"))
-            {
-                playerAudio.PlayOneShot(bark, 1.0f);
-                gameOverText.gameObject.SetActive(true);
-             //   Destroy(other.gameObject);
-                spawn.setFail();
+            case GroundName:
+                // Do nothing for ground collision
+                break;
 
-            }
-            else
-            {
-                playerAudio.PlayOneShot(failure, 1.0f);
-                gameOverText.gameObject.SetActive(true);
-                spawn.setFail();
-            }
+            default:
+                if (objectName.StartsWith(EnemyPrefix))
+                {
+                    HandleEnemyCollision(other);
+                }
+                else if (objectName.StartsWith(WolfPrefix))
+                {
+                    HandleWolfCollision();
+                }
+                else
+                {
+                    HandleDefaultCollision();
+                }
+                break;
         }
+    }
 
+    private void HandleFenceCollision(Collider other)
+    {
+        spawnManager?.UpdateScore(20);
+        PlayAudioClip(success);
+        Destroy(other.gameObject);
+    }
+
+    private void HandleEnemyCollision(Collider other)
+    {
+        PlayAudioClip(bounce);
+
+        Vector3 direction = (other.transform.position - transform.position).normalized;
+        rb?.AddForce(direction * bounceForce);
+    }
+
+    private void HandleWolfCollision()
+    {
+        PlayAudioClip(bark);
+        TriggerGameOver();
+    }
+
+    private void HandleDefaultCollision()
+    {
+        PlayAudioClip(failure);
+        TriggerGameOver();
+    }
+
+    private void TriggerGameOver()
+    {
+        if (gameOverText != null)
+        {
+            gameOverText.gameObject.SetActive(true);
+        }
+        spawnManager?.EndGame();
+    }
+
+    private void PlayAudioClip(AudioClip clip)
+    {
+        if (playerAudio != null && clip != null)
+        {
+            playerAudio.PlayOneShot(clip, 1.0f);
+        }
     }
 }

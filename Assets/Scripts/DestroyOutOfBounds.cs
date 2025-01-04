@@ -1,27 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DestroyOutOfBounds : MonoBehaviour
 {
-    private float lowerBound = -14.0f;
-    private Spawn spawn;
+    private const float LowerBound = -14.0f; // Constant for lower boundary
+    private SpawnManager _spawnManager;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        spawn = GameObject.Find("SpawnManager").GetComponent<Spawn>();
+        _spawnManager = GameObject.Find("SpawnManager")?.GetComponent<SpawnManager>();
+        if (_spawnManager == null)
+        {
+            Debug.LogError("SpawnManager not found. Ensure there's a GameObject named 'SpawnManager' with a SpawnManager script attached.");
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-
-
-       if (transform.position.z < lowerBound)
+        if (transform.position.z < LowerBound)
         {
-            Destroy(gameObject);
-            spawn.updateScore(5);
+            HandleOutOfBounds();
+        }
+    }
+
+    private void HandleOutOfBounds()
+    {
+        Destroy(gameObject);
+        if (_spawnManager != null)
+        {
+            _spawnManager.UpdateScore(5);
         }
     }
 }
