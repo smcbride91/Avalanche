@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using System.Collections;
 
 public class DetectCollision : MonoBehaviour
 {
@@ -84,11 +85,34 @@ public class DetectCollision : MonoBehaviour
 
     private void HandleEnemyCollision(Collider other)
     {
+        // Play bounce audio
         PlayAudioClip(bounce);
 
-        Vector3 direction = (other.transform.position - transform.position).normalized;
-        rb?.AddForce(direction * bounceForce);
+        // Calculate the bounce direction
+        Vector3 direction = (transform.position - other.transform.position).normalized;
+
+        // Apply an impulse force for the bounce
+        Vector3 bounceDirection = new Vector3(direction.x, 0.5f, direction.z).normalized;
+        rb?.AddForce(bounceDirection * bounceForce, ForceMode.Impulse);
+
+        // Reset velocity after a short duration to stop the movement
+        StartCoroutine(ResetVelocityAfterBounce());
     }
+
+    private IEnumerator ResetVelocityAfterBounce()
+    {
+        // Wait for a brief moment to allow the bounce to take effect
+        yield return new WaitForSeconds(0.1f);
+
+        // Stop the Rigidbody's velocity to end the bounce effect
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+        }
+    }
+
+
+
 
     private void HandleWolfCollision()
     {

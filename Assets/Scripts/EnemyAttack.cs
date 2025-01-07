@@ -10,12 +10,20 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private Animator animator;
 
     [Header("Attack Settings")]
-    [SerializeField] private float attackRange = 2f; // Range at which the enemy attacks
+    [SerializeField] private float attackRange = 0.0f; // Adjusted default attack range
+    [SerializeField] private float movementSpeed = 40.0f; // Custom movement speed for the enemy
+
     private Transform playerTarget;
 
     private void Start()
     {
         AssignClosestPlayer();
+
+        // Set the NavMeshAgent speed explicitly
+        if (agent != null)
+        {
+            agent.speed = movementSpeed; // Ensure the NavMeshAgent uses the desired speed
+        }
     }
 
     private void Update()
@@ -68,6 +76,10 @@ public class EnemyAttack : MonoBehaviour
             {
                 animator.SetBool("isWalking", true);
                 animator.SetBool("isAttacking", false);
+
+                // Sync animation speed with NavMeshAgent speed
+                float currentSpeed = agent.velocity.magnitude;
+                animator.speed = currentSpeed > 0 ? currentSpeed / agent.speed : 1f;
             }
         }
     }
