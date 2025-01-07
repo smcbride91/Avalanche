@@ -6,6 +6,11 @@ public class EnemyAttack : MonoBehaviour
     [Header("Navigation Settings")]
     [SerializeField] private NavMeshAgent agent;
 
+    [Header("Animation Settings")]
+    [SerializeField] private Animator animator;
+
+    [Header("Attack Settings")]
+    [SerializeField] private float attackRange = 2f; // Range at which the enemy attacks
     private Transform playerTarget;
 
     private void Start()
@@ -15,7 +20,19 @@ public class EnemyAttack : MonoBehaviour
 
     private void Update()
     {
-        MoveTowardsPlayer();
+        if (playerTarget != null)
+        {
+            float distanceToPlayer = Vector3.Distance(transform.position, playerTarget.position);
+
+            if (distanceToPlayer <= attackRange)
+            {
+                StopAndAttack();
+            }
+            else
+            {
+                MoveTowardsPlayer();
+            }
+        }
     }
 
     /// <summary>
@@ -45,6 +62,30 @@ public class EnemyAttack : MonoBehaviour
         if (playerTarget != null)
         {
             agent.SetDestination(playerTarget.position);
+
+            // Trigger the walking animation
+            if (animator != null)
+            {
+                animator.SetBool("isWalking", true);
+                animator.SetBool("isAttacking", false);
+            }
         }
+    }
+
+    /// <summary>
+    /// Stops the enemy and triggers the attack animation.
+    /// </summary>
+    private void StopAndAttack()
+    {
+        agent.ResetPath(); // Stop the agent from moving
+
+        // Trigger the attack animation
+        if (animator != null)
+        {
+            animator.SetBool("isWalking", false);
+            animator.SetBool("isAttacking", true);
+        }
+
+        // Implement your attack logic here (e.g., dealing damage to the player)
     }
 }

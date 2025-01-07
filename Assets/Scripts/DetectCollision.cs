@@ -93,13 +93,13 @@ public class DetectCollision : MonoBehaviour
     private void HandleWolfCollision()
     {
         PlayAudioClip(bark);
-        TriggerGameOver();
+      //  TriggerGameOver();
     }
 
     private void HandleDefaultCollision()
     {
         PlayAudioClip(failure);
-        TriggerGameOver();
+    //    TriggerGameOver();
     }
 
     private void TriggerGameOver()
