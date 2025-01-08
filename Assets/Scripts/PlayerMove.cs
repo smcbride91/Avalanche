@@ -46,7 +46,7 @@ public class PlayerMove : MonoBehaviour
         Vector3 movement = this.transform.forward * verticalAxis - this.transform.right *
         horizontalAxis;
         movement.Normalize();
-        this.transform.position += movement * 0.10f;
+        this.transform.position += movement * 0.05f;
         this.anim.SetFloat("vertical", verticalAxis);
         this.anim.SetFloat("horizontal", horizontalAxis);
     }
