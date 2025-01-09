@@ -7,7 +7,7 @@ public class PlayerMove : MonoBehaviour
     private SpawnManager spawnManager;
 
     // Movement parameters
-    private const float Speed = 20.0f;
+    private const float Speed = 50.0f;
     private const float DownwardForce = 0.2f;
 
     private float horizontalInput;

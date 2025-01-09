@@ -11,7 +11,7 @@ public class EnemyAttack : MonoBehaviour
 
     [Header("Attack Settings")]
     [SerializeField] private float attackRange = 0.0f; // Adjusted default attack range
-    [SerializeField] private float movementSpeed = 40.0f; // Custom movement speed for the enemy
+    [SerializeField] private float movementSpeed = 50.0f; // Custom movement speed for the enemy
 
     private Transform playerTarget;
 
