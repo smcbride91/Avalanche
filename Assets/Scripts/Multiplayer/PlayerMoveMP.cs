@@ -6,77 +6,58 @@ using TMPro;
 
 public class PlayerMoveMP : NetworkBehaviour
 {
-//    public Animator anim;
+    public Animator anim;
     private Rigidbody rb;
-    private NetworkManagerUI networkManagerUI;
-    private float turnSpeed = 30.0f;
-    private float horizontalInput;
-    private float forwardInput;
-    private float speed = 20.0f;
-    private float xRangeLeft = 23.58f;
-    private float xRangeRight = -26.4f;
-    private float zRangeForward = 33.17f;
-    private float zRangeBack = 12.0f;
     private SpawnMP spawnMP;
 
-    void Start()
+    // Movement parameters
+    private const float Speed = 50.0f;
+    private const float DownwardForce = 0.2f;
+
+    private float horizontalInput;
+    private float forwardInput;
+
+    private void Start()
     {
         spawnMP = GameObject.Find("SpawnManager").GetComponent<SpawnMP>();
-        this.rb = GetComponent<Rigidbody>();
+
+        rb = GetComponent<Rigidbody>();
+
+        if (spawnMP == null)
+        {
+            Debug.LogError("SpawnManager not found. Ensure there is a GameObject named 'SpawnManager' with the SpawnManager script attached.");
+        }
+
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody not found. Ensure this GameObject has a Rigidbody component.");
+        }
     }
 
     private void Update()
     {
-       
-       if (spawnMP.playerDeath == false)
+        if (spawnMP != null && spawnMP.isGameActive && spawnMP.playerDeath == false)
         {
-                    Move();
-                    Still();
-                    CheckRange();
-
-                    horizontalInput = Input.GetAxis("Horizontal");
-                    forwardInput = Input.GetAxis("Vertical");
-
-                    transform.Translate(Vector3.forward * Time.deltaTime * speed * forwardInput);
-                    transform.Translate(Vector3.left * Time.deltaTime * turnSpeed * horizontalInput);
+            ApplyMovement();
+            ApplyDownwardForce();
         }
-        
     }
 
-    private void Move()
+
+    private void ApplyMovement()
     {
         float verticalAxis = Input.GetAxis("Vertical");
         float horizontalAxis = Input.GetAxis("Horizontal");
-        Vector3 movement = this.transform.forward * verticalAxis + this.transform.right * horizontalAxis;
+        Vector3 movement = this.transform.forward * verticalAxis - this.transform.right *
+        horizontalAxis;
         movement.Normalize();
-        this.transform.position += movement * 0.01f;
-
+        this.transform.position += movement * 0.05f;
+        this.anim.SetFloat("vertical", verticalAxis);
+        this.anim.SetFloat("horizontal", horizontalAxis);
     }
-    private void Still()
+
+    private void ApplyDownwardForce()
     {
         this.rb.AddForce(Vector3.down * 1 * Time.deltaTime, ForceMode.Impulse);
-    }
-
-    private void CheckRange()
-    {
-        if (transform.position.z > zRangeForward)
-        {
-            transform.position = new Vector3(transform.position.x, transform.position.y, zRangeForward);
-        }
-
-        if (transform.position.z < zRangeBack)
-        {
-            transform.position = new Vector3(transform.position.x, transform.position.y, zRangeBack);
-        }
-
-        if (transform.position.x < xRangeRight)
-        {
-            transform.position = new Vector3(xRangeRight, transform.position.y, transform.position.z);
-        }
-
-        if (transform.position.x > xRangeLeft)
-        {
-            transform.position = new Vector3(xRangeLeft, transform.position.y, transform.position.z);
-        }
     }
 }
