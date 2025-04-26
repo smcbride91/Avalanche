@@ -28,6 +28,12 @@ public class EnemyAttack : MonoBehaviour
 
     private void Update()
     {
+        // If the current player target is dead, assign a new target
+        if (playerTarget == null || !IsPlayerAlive(playerTarget))
+        {
+            AssignClosestPlayer();
+        }
+
         if (playerTarget != null)
         {
             float distanceToPlayer = Vector3.Distance(transform.position, playerTarget.position);
@@ -52,14 +58,30 @@ public class EnemyAttack : MonoBehaviour
 
         if (playerObjects.Length > 0)
         {
-            // For simplicity, assign the first player found. 
-            // Could be expanded to calculate the closest player.
-            playerTarget = playerObjects[0].transform;
+            foreach (GameObject player in playerObjects)
+            {
+                if (IsPlayerAlive(player.transform))
+                {
+                    playerTarget = player.transform;
+                    break; // Assign the first alive player as the target
+                }
+            }
         }
         else
         {
             Debug.LogWarning("No objects with the tag 'Player' were found.");
         }
+    }
+
+    /// <summary>
+    /// Checks if a player is alive.
+    /// </summary>
+    private bool IsPlayerAlive(Transform player)
+    {
+        // This function assumes you have a script with a 'isAlive' flag or similar on your player objects.
+        // Replace with your actual method of checking if the player is alive.
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        return playerHealth != null && playerHealth.IsAlive();
     }
 
     /// <summary>

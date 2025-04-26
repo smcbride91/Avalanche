@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/AvalancheNetwork.unity
     guid: a1ca97cc68bf7054f9427b163d12ecb0
+  - enabled: 1
+    path: Assets/Scenes/AvalancheLocal.unity
+    guid: e1a3e530d0aaf454aa2f0eef78e381b7
   m_configObjects: {}

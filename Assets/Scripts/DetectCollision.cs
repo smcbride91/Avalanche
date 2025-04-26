@@ -1,48 +1,38 @@
-using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
-using System.Collections;
 
 public class DetectCollision : MonoBehaviour
 {
     public TextMeshProUGUI gameOverText;
+    public TextMeshProUGUI player1WinMessage;  // Added reference for Player 1 win message
+    public TextMeshProUGUI player2WinMessage;  // Added reference for Player 2 win message
     public AudioClip success;
     public AudioClip failure;
     public AudioClip bounce;
     public AudioClip bark;
     [SerializeField] private float bounceForce;
+    public GameObject pauseMenuUI;
+    [SerializeField] private int playerNumber = 1;
 
     private Rigidbody rb;
     private SpawnManager spawnManager;
     private AudioSource playerAudio;
 
-    // Constants for object names
-    private const string SpawnManagerName = "SpawnManager";
     private const string FenceName = "SM_Prop_Fence_02(Clone)";
     private const string GroundName = "Ground";
     private const string EnemyPrefix = "Enemy";
     private const string WolfPrefix = "Wolf";
 
+    // Static flags to track if both players are dead
+    private static bool player1Dead = false;
+    private static bool player2Dead = false;
+
     private void Start()
     {
-        spawnManager = GameObject.Find(SpawnManagerName)?.GetComponent<SpawnManager>();
+        spawnManager = GameObject.Find("SpawnManager")?.GetComponent<SpawnManager>();
         playerAudio = GetComponent<AudioSource>();
         rb = GetComponent<Rigidbody>();
-
-        if (spawnManager == null)
-        {
-            Debug.LogError($"SpawnManager not found. Ensure a GameObject named '{SpawnManagerName}' exists with the SpawnManager script attached.");
-        }
-
-        if (playerAudio == null)
-        {
-            Debug.LogError("AudioSource component not found. Ensure this GameObject has an AudioSource attached.");
-        }
-
-        if (rb == null)
-        {
-            Debug.LogError("Rigidbody component not found. Ensure this GameObject has a Rigidbody attached.");
-        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -54,65 +44,37 @@ public class DetectCollision : MonoBehaviour
             case FenceName:
                 HandleFenceCollision(other);
                 break;
-
             case GroundName:
-                // Do nothing for ground collision
                 break;
-
             default:
-                if (objectName.StartsWith(EnemyPrefix))
-                {
-                    HandleEnemyCollision(other);
-                }
-                else if (objectName.StartsWith(WolfPrefix))
-                {
-                    HandleWolfCollision();
-                }
-                else
-                {
-                    HandleDefaultCollision();
-                }
+                if (objectName.StartsWith(EnemyPrefix)) HandleEnemyCollision(other);
+                else if (objectName.StartsWith(WolfPrefix)) HandleWolfCollision();
+                else HandleDefaultCollision();
                 break;
         }
     }
 
     private void HandleFenceCollision(Collider other)
     {
-        spawnManager?.UpdateScore(20);
+        spawnManager?.UpdateScore(20, playerNumber);
         PlayAudioClip(success);
         Destroy(other.gameObject);
     }
 
     private void HandleEnemyCollision(Collider other)
     {
-        // Play bounce audio
         PlayAudioClip(bounce);
-
-        // Calculate the bounce direction
         Vector3 direction = (transform.position - other.transform.position).normalized;
-
-        // Apply an impulse force for the bounce
         Vector3 bounceDirection = new Vector3(direction.x, 0.5f, direction.z).normalized;
         rb?.AddForce(bounceDirection * bounceForce, ForceMode.Impulse);
-
-        // Reset velocity after a short duration to stop the movement
         StartCoroutine(ResetVelocityAfterBounce());
     }
 
     private IEnumerator ResetVelocityAfterBounce()
     {
-        // Wait for a brief moment to allow the bounce to take effect
         yield return new WaitForSeconds(0.1f);
-
-        // Stop the Rigidbody's velocity to end the bounce effect
-        if (rb != null)
-        {
-            rb.velocity = Vector3.zero;
-        }
+        if (rb != null) rb.velocity = Vector3.zero;
     }
-
-
-
 
     private void HandleWolfCollision()
     {
@@ -128,11 +90,93 @@ public class DetectCollision : MonoBehaviour
 
     private void TriggerGameOver()
     {
-        if (gameOverText != null)
+        PlayAudioClip(failure); // Play sound first
+        StartCoroutine(DeactivateAfterDelay(1.5f));
+
+        if (playerNumber == 1)
         {
-            gameOverText.gameObject.SetActive(true);
+            player1Dead = true;
+            spawnManager.isPlayer1Alive = false;
+
+            // Get PlayerHealth and call Die() on Player 1
+            PlayerHealth playerHealth1 = GetComponent<PlayerHealth>();
+            if (playerHealth1 != null)
+            {
+                playerHealth1.Die(); // Mark Player 1 as dead
+            }
         }
-        spawnManager?.EndGame();
+        else if (playerNumber == 2)
+        {
+            player2Dead = true;
+            spawnManager.isPlayer2Alive = false;
+
+            // Get PlayerHealth and call Die() on Player 2
+            PlayerHealth playerHealth2 = GetComponent<PlayerHealth>();
+            if (playerHealth2 != null)
+            {
+                playerHealth2.Die(); // Mark Player 2 as dead
+            }
+        }
+
+        // Disable movement and renderer components when player dies
+        if (GetComponent<PlayerMove>() != null) GetComponent<PlayerMove>().enabled = false;
+        if (GetComponent<Collider2D>() != null) GetComponent<Collider2D>().enabled = false;
+        if (GetComponent<SpriteRenderer>() != null) GetComponent<SpriteRenderer>().enabled = false;
+
+        // Game over logic for single-player mode
+        if (!spawnManager.isMultiplayer)
+        {
+            player1Dead = true;
+            Time.timeScale = 0f;
+
+            if (gameOverText != null)
+                gameOverText.gameObject.SetActive(true);
+
+            if (pauseMenuUI != null)
+                pauseMenuUI.SetActive(true);
+
+            spawnManager?.EndGame();
+
+            // NEW: Tell the PauseManager the game is over
+            GamePauseManager.isGameOver = true;
+        }
+
+        // Logic for game over when both players are dead in multiplayer mode
+        if (player1Dead && player2Dead)
+        {
+            Time.timeScale = 0f;
+
+            if (gameOverText != null)
+                gameOverText.gameObject.SetActive(true);
+
+            if (pauseMenuUI != null)
+                pauseMenuUI.SetActive(true);
+
+            spawnManager?.EndGame();
+
+            // NEW: Tell the PauseManager the game is over
+            GamePauseManager.isGameOver = true;
+
+            // NEW: Determine winner and show corresponding message
+            int player1Score = spawnManager.GetPlayerScore(1);  // Assuming this function exists
+            int player2Score = spawnManager.GetPlayerScore(2);  // Assuming this function exists
+
+            if (player1Score > player2Score)
+            {
+                if (player1WinMessage != null)
+                    player1WinMessage.gameObject.SetActive(true);  // Display Player 1 win message
+            }
+            else if (player2Score > player1Score)
+            {
+                if (player2WinMessage != null)
+                    player2WinMessage.gameObject.SetActive(true);  // Display Player 2 win message
+            }
+            else
+            {
+                // If scores are equal, show a tie message or both win messages
+                // You can add a tie message logic here if necessary
+            }
+        }
     }
 
     private void PlayAudioClip(AudioClip clip)
@@ -141,5 +185,17 @@ public class DetectCollision : MonoBehaviour
         {
             playerAudio.PlayOneShot(clip, 1.0f);
         }
+    }
+
+    public static void ResetDeathFlags()
+    {
+        player1Dead = false;
+        player2Dead = false;
+    }
+
+    private IEnumerator DeactivateAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        gameObject.SetActive(false);
     }
 }

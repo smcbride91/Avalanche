@@ -25,9 +25,9 @@ public class DestroyOutOfBounds : MonoBehaviour
     private void HandleOutOfBounds()
     {
         Destroy(gameObject);
-        if (_spawnManager != null)
+        if (!GamePauseManager.isGameOver)
         {
-            _spawnManager.UpdateScore(5);
+            _spawnManager.AwardSharedPoints(20);
         }
     }
 }

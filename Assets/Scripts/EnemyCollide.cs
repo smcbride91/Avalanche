@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyCollide : MonoBehaviour
@@ -8,7 +6,6 @@ public class EnemyCollide : MonoBehaviour
     public AudioClip shock;
     private AudioSource enemyAudio;
 
-    // Start is called before the first frame update
     void Start()
     {
         spawn = GameObject.Find("SpawnManager").GetComponent<SpawnManager>();
@@ -22,7 +19,11 @@ public class EnemyCollide : MonoBehaviour
             enemyAudio.PlayOneShot(shock);
             spawn.SpawnRandomEnemy();
             Destroy(this.gameObject);
-            spawn.UpdateScore(20);
+            if (!GamePauseManager.isGameOver)
+            {
+                spawn.AwardSharedPoints(20);
+            }
+
         }
     }
 }
