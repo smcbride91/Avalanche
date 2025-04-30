@@ -1,12 +1,13 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using Unity.Netcode;
 
-public class DetectCollision : MonoBehaviour
+public class DetectCollision : NetworkBehaviour
 {
     public TextMeshProUGUI gameOverText;
-    public TextMeshProUGUI player1WinMessage;  // Added reference for Player 1 win message
-    public TextMeshProUGUI player2WinMessage;  // Added reference for Player 2 win message
+    public TextMeshProUGUI player1WinMessage;
+    public TextMeshProUGUI player2WinMessage;
     public AudioClip success;
     public AudioClip failure;
     public AudioClip bounce;
@@ -24,41 +25,82 @@ public class DetectCollision : MonoBehaviour
     private const string EnemyPrefix = "Enemy";
     private const string WolfPrefix = "Wolf";
 
-    // Static flags to track if both players are dead
     private static bool player1Dead = false;
     private static bool player2Dead = false;
+
+    private bool isLocalMultiplayer = false;
+    private bool isNetworkMultiplayer = false;
+
 
     private void Start()
     {
         spawnManager = GameObject.Find("SpawnManager")?.GetComponent<SpawnManager>();
         playerAudio = GetComponent<AudioSource>();
         rb = GetComponent<Rigidbody>();
+
+        if (spawnManager != null)
+        {
+            isLocalMultiplayer = spawnManager.isLocalMultiplayer;
+            isNetworkMultiplayer = spawnManager.isNetworkMultiplayer;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         string objectName = other.name;
 
-        switch (objectName)
+        if (objectName.Contains(FenceName))
         {
-            case FenceName:
-                HandleFenceCollision(other);
-                break;
-            case GroundName:
-                break;
-            default:
-                if (objectName.StartsWith(EnemyPrefix)) HandleEnemyCollision(other);
-                else if (objectName.StartsWith(WolfPrefix)) HandleWolfCollision();
-                else HandleDefaultCollision();
-                break;
+            HandleFenceCollision(other);
         }
+        else if (objectName == GroundName)
+        {
+            // Do nothing
+        }
+        else if (objectName.Contains("Player"))
+        {
+
+        }
+        else if (objectName.Contains(EnemyPrefix))
+        {
+            HandleEnemyCollision(other);
+        }
+        else if (objectName.Contains(WolfPrefix))
+        {
+            HandleWolfCollision();
+        }
+        else
+        {
+            HandleDefaultCollision();
+        }
+
+
     }
 
     private void HandleFenceCollision(Collider other)
     {
-        spawnManager?.UpdateScore(20, playerNumber);
+        if (isNetworkMultiplayer && !IsServer)
+        {
+            NotifyServerOfFenceScoreServerRpc();
+
+        }
+        else
+        {
+            spawnManager?.UpdateScore(20, playerNumber);
+        }
+
         PlayAudioClip(success);
-        Destroy(other.gameObject);
+
+        if (!isNetworkMultiplayer)
+        {
+            Destroy(other.gameObject);
+        }
+        else if (isNetworkMultiplayer && !IsServer && GetComponent<NetworkObject>())
+        {
+            GetComponent<NetworkObject>().Despawn(true);
+
+        }
+
     }
 
     private void HandleEnemyCollision(Collider other)
@@ -79,112 +121,162 @@ public class DetectCollision : MonoBehaviour
     private void HandleWolfCollision()
     {
         PlayAudioClip(bark);
-        TriggerGameOver();
+        TriggerCollisionEvent();
     }
 
     private void HandleDefaultCollision()
     {
         PlayAudioClip(failure);
+        TriggerCollisionEvent();
+    }
+
+    private void TriggerCollisionEvent()
+    {
+        if (isNetworkMultiplayer)
+        {
+            if (IsServer)
+            {
+                TriggerGameOverForAll();
+            }
+            else if (IsOwner)
+            {
+                ReportCollisionToServerRpc();
+            }
+        }
+        else
+        {
+            TriggerGameOver();
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ReportCollisionToServerRpc(ServerRpcParams rpcParams = default)
+    {
+        TriggerGameOverForAll();
+    }
+
+    private void TriggerGameOverForAll()
+    {
+        TriggerGameOverClientRpc();
+        TriggerGameOver();
+    }
+
+    [ClientRpc]
+    private void TriggerGameOverClientRpc(ClientRpcParams rpcParams = default)
+    {
         TriggerGameOver();
     }
 
     private void TriggerGameOver()
     {
-        PlayAudioClip(failure); // Play sound first
+        PlayAudioClip(failure);
         StartCoroutine(DeactivateAfterDelay(1.5f));
 
-        if (playerNumber == 1)
-        {
-            player1Dead = true;
-            spawnManager.isPlayer1Alive = false;
+        // Debugging output to track the server status and player number
+        Debug.Log("IsServer: " + IsServer.ToString());
+        Debug.Log("Player number: " + playerNumber.ToString());
 
-            // Get PlayerHealth and call Die() on Player 1
-            PlayerHealth playerHealth1 = GetComponent<PlayerHealth>();
-            if (playerHealth1 != null)
+        if (!isNetworkMultiplayer)
+        {
+            // Local or single-player logic
+            if (playerNumber == 1)
             {
-                playerHealth1.Die(); // Mark Player 1 as dead
+                player1Dead = true;
+                if (spawnManager != null) spawnManager.isPlayer1Alive = false;
+
+                PlayerHealth playerHealth1 = GetComponent<PlayerHealth>();
+                if (playerHealth1 != null) playerHealth1.Die();
+            }
+            else if (playerNumber == 2)
+            {
+                player2Dead = true;
+                if (spawnManager != null) spawnManager.isPlayer2Alive = false;
+
+                PlayerHealth playerHealth2 = GetComponent<PlayerHealth>();
+                if (playerHealth2 != null) playerHealth2.Die();
+            }
+
+            // For local multiplayer, the game will end if both players are dead
+            if (player1Dead && player2Dead)
+            {
+                EndGame();
+            }
+            else if (!isNetworkMultiplayer&&!isLocalMultiplayer&&player1Dead)
+            {
+                EndGame();
             }
         }
-        else if (playerNumber == 2)
+        else
         {
-            player2Dead = true;
-            spawnManager.isPlayer2Alive = false;
-
-            // Get PlayerHealth and call Die() on Player 2
-            PlayerHealth playerHealth2 = GetComponent<PlayerHealth>();
-            if (playerHealth2 != null)
+            // Networked multiplayer logic
+            if (IsServer)
             {
-                playerHealth2.Die(); // Mark Player 2 as dead
-            }
-        }
+                // Server directly updates the death status for both players
+                if (playerNumber == 1)
+                    spawnManager?.SetNetPlayerDead(1);
+                else if (playerNumber == 2)
+                    spawnManager?.SetNetPlayerDead(2);
 
-        // Disable movement and renderer components when player dies
-        if (GetComponent<PlayerMove>() != null) GetComponent<PlayerMove>().enabled = false;
-        if (GetComponent<Collider2D>() != null) GetComponent<Collider2D>().enabled = false;
-        if (GetComponent<SpriteRenderer>() != null) GetComponent<SpriteRenderer>().enabled = false;
-
-        // Game over logic for single-player mode
-        if (!spawnManager.isMultiplayer)
-        {
-            player1Dead = true;
-            Time.timeScale = 0f;
-
-            if (gameOverText != null)
-                gameOverText.gameObject.SetActive(true);
-
-            if (pauseMenuUI != null)
-                pauseMenuUI.SetActive(true);
-
-            spawnManager?.EndGame();
-
-            // NEW: Tell the PauseManager the game is over
-            GamePauseManager.isGameOver = true;
-        }
-
-        // Logic for game over when both players are dead in multiplayer mode
-        if (player1Dead && player2Dead)
-        {
-            Time.timeScale = 0f;
-
-            if (gameOverText != null)
-                gameOverText.gameObject.SetActive(true);
-
-            if (pauseMenuUI != null)
-                pauseMenuUI.SetActive(true);
-
-            spawnManager?.EndGame();
-
-            // NEW: Tell the PauseManager the game is over
-            GamePauseManager.isGameOver = true;
-
-            // NEW: Determine winner and show corresponding message
-            int player1Score = spawnManager.GetPlayerScore(1);  // Assuming this function exists
-            int player2Score = spawnManager.GetPlayerScore(2);  // Assuming this function exists
-
-            if (player1Score > player2Score)
-            {
-                if (player1WinMessage != null)
-                    player1WinMessage.gameObject.SetActive(true);  // Display Player 1 win message
-            }
-            else if (player2Score > player1Score)
-            {
-                if (player2WinMessage != null)
-                    player2WinMessage.gameObject.SetActive(true);  // Display Player 2 win message
+                // Check if both players are dead
+                if (spawnManager.netPlayer1Dead.Value && spawnManager.netPlayer2Dead.Value)
+                {
+                    EndGame();
+                }
             }
             else
             {
-                // If scores are equal, show a tie message or both win messages
-                // You can add a tie message logic here if necessary
+                // Notify the server that this player is dead
+                NotifyServerOfNetworkDeathServerRpc(playerNumber);
+                if (spawnManager.netPlayer1Dead.Value && spawnManager.netPlayer2Dead.Value)
+                {
+                    EndGame();
+                }
             }
+        }
+
+        // Disable components to indicate player death (for both local and networked multiplayer)
+        if (GetComponent<PlayerMove>() != null) GetComponent<PlayerMove>().enabled = false;
+        if (GetComponent<Collider2D>() != null) GetComponent<Collider2D>().enabled = false;
+        if (GetComponent<SpriteRenderer>() != null) GetComponent<SpriteRenderer>().enabled = false;
+    }
+
+    private void EndGame()
+    {
+        Time.timeScale = 0f;
+
+        if (gameOverText != null)
+            gameOverText.gameObject.SetActive(true);
+
+        if (pauseMenuUI != null)
+            pauseMenuUI.SetActive(true);
+
+        spawnManager?.EndGame();
+        GamePauseManager.isGameOver = true;
+
+        // Show final results based on score
+        int player1Score = spawnManager.GetPlayerScore(1);
+        int player2Score = spawnManager.GetPlayerScore(2);
+
+        if (player1Score > player2Score)
+        {
+            if (player1WinMessage != null)
+                player1WinMessage.gameObject.SetActive(true);
+        }
+        else if (player2Score > player1Score)
+        {
+            if (player2WinMessage != null)
+                player2WinMessage.gameObject.SetActive(true);
+        }
+        else
+        {
+            // Handle tie if you want
         }
     }
 
     private void PlayAudioClip(AudioClip clip)
     {
         if (playerAudio != null && clip != null)
-        {
             playerAudio.PlayOneShot(clip, 1.0f);
-        }
     }
 
     public static void ResetDeathFlags()
@@ -198,4 +290,62 @@ public class DetectCollision : MonoBehaviour
         yield return new WaitForSeconds(delay);
         gameObject.SetActive(false);
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void NotifyServerOfFenceScoreServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (spawnManager == null || !spawnManager.isGameActive)
+            return;
+
+        ulong clientId = rpcParams.Receive.SenderClientId;
+        int playerNum = spawnManager.GetPlayerNumberByClientId(clientId); // Add this method
+
+        bool isAlive = playerNum == 1 ? spawnManager.isPlayer1Alive : spawnManager.isPlayer2Alive;
+        if (isAlive)
+        {
+            spawnManager.UpdateScore(20, playerNum);
+        }
+    }
+    [ClientRpc]
+    private void ShowFinalResultsClientRpc()
+    {
+        Time.timeScale = 0f;
+
+        if (gameOverText != null)
+            gameOverText.gameObject.SetActive(true);
+
+        if (pauseMenuUI != null)
+            pauseMenuUI.SetActive(true);
+
+        GamePauseManager.isGameOver = true;
+
+        int player1Score = spawnManager.GetPlayerScore(1);
+        int player2Score = spawnManager.GetPlayerScore(2);
+
+        if (player1Score > player2Score)
+        {
+            if (player1WinMessage != null)
+                player1WinMessage.gameObject.SetActive(true);
+        }
+        else if (player2Score > player1Score)
+        {
+            if (player2WinMessage != null)
+                player2WinMessage.gameObject.SetActive(true);
+        }
+        else
+        {
+            // Handle tie if you want
+        }
+    }
+
+
+
+    [ServerRpc(RequireOwnership = false)]
+    private void NotifyServerOfNetworkDeathServerRpc(int playerNum)
+    {
+        spawnManager?.SetNetPlayerDead(playerNum);
+    }
+
+
+
 }

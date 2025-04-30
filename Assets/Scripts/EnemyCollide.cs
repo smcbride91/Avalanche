@@ -1,6 +1,7 @@
 using UnityEngine;
+using Unity.Netcode;
 
-public class EnemyCollide : MonoBehaviour
+public class EnemyCollide : NetworkBehaviour
 {
     private SpawnManager spawn;
     public AudioClip shock;
@@ -18,10 +19,20 @@ public class EnemyCollide : MonoBehaviour
         {
             enemyAudio.PlayOneShot(shock);
             spawn.SpawnRandomEnemy();
-            Destroy(this.gameObject);
+            if (!spawn.isNetworkMultiplayer)
+            {
+                Destroy(this.gameObject);
+            }
+            else if (NetworkManager.Singleton.IsServer)
+            {
+                GetComponent<NetworkObject>().Despawn(true);
+            }
             if (!GamePauseManager.isGameOver)
             {
-                spawn.AwardSharedPoints(20);
+                if (!spawn.isNetworkMultiplayer || IsServer)
+                {
+                    spawn.AwardSharedPoints(20);
+                }
             }
 
         }

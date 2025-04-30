@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.AI;
+using Unity.Netcode;
 
-public class EnemyAttack : MonoBehaviour
+public class EnemyAttack : NetworkBehaviour
 {
     [Header("Navigation Settings")]
     [SerializeField] private NavMeshAgent agent;
@@ -10,25 +11,38 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private Animator animator;
 
     [Header("Attack Settings")]
-    [SerializeField] private float attackRange = 0.0f; // Adjusted default attack range
-    [SerializeField] private float movementSpeed = 50.0f; // Custom movement speed for the enemy
+    [SerializeField] private float attackRange = 0.0f;
+    [SerializeField] private float movementSpeed = 50.0f;
 
     private Transform playerTarget;
+    private bool shouldRunAI;
+    private SpawnManager spawnManager;
+
 
     private void Start()
     {
-        AssignClosestPlayer();
-
-        // Set the NavMeshAgent speed explicitly
-        if (agent != null)
+        // Determine if this instance should control the enemy AI
+        spawnManager = GameObject.Find("SpawnManager")?.GetComponent<SpawnManager>();
+        if (!spawnManager.isNetworkMultiplayer || IsServer)
         {
-            agent.speed = movementSpeed; // Ensure the NavMeshAgent uses the desired speed
+            shouldRunAI = true;
+            AssignClosestPlayer();
+
+            if (agent != null)
+            {
+                agent.speed = movementSpeed;
+            }
+        }
+        else
+        {
+            shouldRunAI = false;
         }
     }
 
     private void Update()
     {
-        // If the current player target is dead, assign a new target
+        if (!shouldRunAI) return;
+
         if (playerTarget == null || !IsPlayerAlive(playerTarget))
         {
             AssignClosestPlayer();
@@ -49,9 +63,6 @@ public class EnemyAttack : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Finds the closest player and assigns it as the target.
-    /// </summary>
     private void AssignClosestPlayer()
     {
         GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
@@ -63,63 +74,49 @@ public class EnemyAttack : MonoBehaviour
                 if (IsPlayerAlive(player.transform))
                 {
                     playerTarget = player.transform;
-                    break; // Assign the first alive player as the target
+                    break;
                 }
             }
         }
         else
         {
-            Debug.LogWarning("No objects with the tag 'Player' were found.");
+            //            Debug.LogWarning("No objects with the tag 'Player' were found.");
         }
     }
 
-    /// <summary>
-    /// Checks if a player is alive.
-    /// </summary>
     private bool IsPlayerAlive(Transform player)
     {
-        // This function assumes you have a script with a 'isAlive' flag or similar on your player objects.
-        // Replace with your actual method of checking if the player is alive.
         PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
         return playerHealth != null && playerHealth.IsAlive();
     }
 
-    /// <summary>
-    /// Moves the enemy towards the assigned player target if available.
-    /// </summary>
     private void MoveTowardsPlayer()
     {
         if (playerTarget != null)
         {
             agent.SetDestination(playerTarget.position);
 
-            // Trigger the walking animation
             if (animator != null)
             {
                 animator.SetBool("isWalking", true);
                 animator.SetBool("isAttacking", false);
 
-                // Sync animation speed with NavMeshAgent speed
                 float currentSpeed = agent.velocity.magnitude;
                 animator.speed = currentSpeed > 0 ? currentSpeed / agent.speed : 1f;
             }
         }
     }
 
-    /// <summary>
-    /// Stops the enemy and triggers the attack animation.
-    /// </summary>
     private void StopAndAttack()
     {
-        agent.ResetPath(); // Stop the agent from moving
+        agent.ResetPath();
 
-        // Trigger the attack animation
         if (animator != null)
         {
             animator.SetBool("isWalking", false);
             animator.SetBool("isAttacking", true);
         }
 
-        // Implement your attack logic here (e.g., dealing damage to the player)
+        // Add attack logic here
     }
 }
